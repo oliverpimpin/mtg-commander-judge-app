@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Commander Tournament Pods</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel2: #1f2937;
+      --line: #374151;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --green: #166534;
+      --blue: #1d4ed8;
+      --red: #991b1b;
+      --gray: #374151;
+      --gold: #92400e;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1520px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    h1, h2, h3 {
+      margin: 0 0 12px 0;
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid-2 {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .col {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    input, select, button {
+      font: inherit;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--panel2);
+      color: var(--text);
+      padding: 10px 12px;
+    }
+
+    input[type="checkbox"] {
+      width: auto;
+      padding: 0;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    button:hover {
+      filter: brightness(1.08);
+    }
+
+    .btn-green { background: var(--green); }
+    .btn-blue { background: var(--blue); }
+    .btn-red { background: var(--red); }
+    .btn-gray { background: var(--gray); }
+    .btn-gold { background: var(--gold); }
+
+    .muted {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .small {
+      font-size: 0.88rem;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      font-size: 0.9rem;
+    }
+
+    .success { color: #86efac; }
+    .warn { color: #fcd34d; }
+    .danger { color: #fca5a5; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 8px;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .pod-box {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      background: #0b1220;
+      margin-bottom: 12px;
+    }
+
+    .player-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      padding: 4px 0;
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .score-card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: var(--panel2);
+    }
+
+    .score-total {
+      margin-top: 12px;
+      font-weight: 700;
+    }
+
+    .spacer {
+      height: 10px;
+    }
+
+    .narrow-input {
+      width: 90px;
+    }
+
+    @media (max-width: 980px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Commander Tournament Pods</h1>
+    <div class="muted">Offline judge desk for Commander events</div>
+
+    <div class="spacer"></div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="section-title">
+          <h2>Tournament Setup</h2>
+          <span class="pill" id="eventStatus">Not started</span>
+        </div>
+
+        <div class="col">
+          <label for="eventName">Event Name</label>
+          <input id="eventName" type="text" placeholder="Commander League Night" />
+
+          <label for="playerName">Add Player</label>
+          <div class="row">
+            <input id="playerName" type="text" placeholder="Player name" style="flex:1;" />
+            <input id="playerInfamy" type="number" step="1" value="0" class="narrow-input" placeholder="Infamy" />
+            <button class="btn-green" id="addPlayerBtn">Add</button>
+          </div>
+
+          <div class="row">
+            <label for="round1SeedMode">Round 1 Seed Mode</label>
+            <select id="round1SeedMode">
+              <option value="random">Random</option>
+              <option value="infamy">Infamy</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <label><input type="checkbox" id="finalPodEnabled" /> Final Pod for Top 4 after Swiss</label>
+          </div>
+
+          <div class="row">
+            <button class="btn-blue" id="importSampleBtn">Load Sample Players</button>
+            <button class="btn-gray" id="clearPlayersBtn">Clear Players</button>
+            <button class="btn-gold" id="saveBtn">Save</button>
+            <button class="btn-gray" id="loadBtn">Load</button>
+          </div>
+
+          <div class="row">
+            <button class="btn-green" id="startTournamentBtn">Start Tournament</button>
+            <button class="btn-blue" id="finalizeRoundBtn">Finalize Round</button>
+            <button class="btn-gray" id="reopenRoundBtn">Reopen Current Round</button>
+            <button class="btn-blue" id="buildNextRoundBtn">Build Next Round</button>
+            <button class="btn-red" id="undoLastRoundBtn">Undo Last Round</button>
+            <button class="btn-red" id="resetTournamentBtn">Reset Tournament</button>
+          </div>
+
+          <div id="setupSummary" class="muted"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">
+          <h2>Rules Snapshot</h2>
+          <span class="pill" id="roundInfoPill">Rounds: 0</span>
+        </div>
+        <div class="col small">
+          <div class="muted">Round 1 can be Random or Infamy-seeded.</div>
+          <div class="muted">Pods prefer 4-player groups and use 3-player pods when needed.</div>
+          <div class="muted">Each pod must total exactly 10 points.</div>
+          <div class="muted">Default 4-player pod points: 4 / 3 / 2 / 1</div>
+          <div class="muted">Tie example: two players tie for 1st, split 4 + 3 = 3.5 each.</div>
+          <div class="muted">Standings update only after finalization.</div>
+          <div class="muted">Reopen Current Round keeps pods but unlocks score edits.</div>
+          <div class="muted">Undo Last Round removes the most recent Swiss round.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="section-title">
+          <h2>Players</h2>
+          <span class="pill" id="playerCountPill">0 Players</span>
+        </div>
+        <table id="playersTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Infamy</th>
+              <th>Status</th>
+              <th>Action</th>
+              <th>Remove</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="section-title">
+          <h2>Standings</h2>
+          <span class="pill" id="phasePill">Setup</span>
+        </div>
+        <table id="standingsTable">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Name</th>
+              <th>Pts</th>
+              <th>1sts</th>
+              <th>Pods</th>
+              <th>Opp Avg</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="card">
+      <div class="section-title">
+        <h2>Current Round</h2>
+        <span class="pill" id="currentRoundPill">Round 0</span>
+      </div>
+      <div id="roundStatusText" class="muted">No round yet.</div>
+      <div class="spacer"></div>
+      <div id="podsContainer"></div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="card">
+      <div class="section-title">
+        <h2>Final Pod</h2>
+        <span class="pill" id="finalPodPill">Not reached</span>
+      </div>
+      <div id="finalPodContainer" class="muted">Final Pod will appear automatically if enabled.</div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "commander_pods_state_v2_infamy_points";
+
+    let state = {
+      eventName: "",
+      started: false,
+      finishedSwiss: false,
+      players: [],
+      rounds: [],
+      currentRound: 0,
+      maxSwissRounds: 0,
+      round1SeedMode: "random",
+      finalPodEnabled: false,
+      finalPodStarted: false,
+      finalPod: null,
+      championId: null
+    };
+
+    function uid() {
+      return Math.random().toString(36).slice(2, 10);
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function toNumber(value) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function round1DefaultPoints(size) {
+      if (size === 4) return [4, 3, 2, 1];
+      if (size === 3) return [4, 3, 3];
+      return Array(size).fill(0);
+    }
+
+    function getAutoSwissRounds(playerCount) {
+      if (playerCount <= 8) return 3;
+      if (playerCount <= 16) return 4;
+      if (playerCount <= 32) return 5;
+      return 6;
+    }
+
+    function createPlayer(name, infamy = 0) {
+      return {
+        id: uid(),
+        name: name.trim(),
+        infamy: toNumber(infamy),
+        dropped: false
+      };
+    }
+
+    function getPlayerById(id) {
+      return state.players.find(p => p.id === id) || null;
+    }
+
+    function getActivePlayers() {
+      return state.players.filter(p => !p.dropped);
+    }
+
+    function getCompletedRoundsOnly() {
+      return state.rounds.filter(r => r.finalized);
+    }
+
+    function getPlayerPodmates(playerId) {
+      const counts = {};
+      for (const round of getCompletedRoundsOnly()) {
+        for (const pod of round.pods) {
+          if (!pod.playerIds.includes(playerId)) continue;
+          for (const otherId of pod.playerIds) {
+            if (otherId === playerId) continue;
+            counts[otherId] = (counts[otherId] || 0) + 1;
+          }
+        }
+      }
+      return counts;
+    }
+
+    function getPodPointTotal(points) {
+      return points.reduce((sum, x) => sum + toNumber(x), 0);
+    }
+
+    function validatePodPoints(points, playerIds) {
+      if (!points || points.length !== playerIds.length) return false;
+      const total = getPodPointTotal(points);
+      return Math.abs(total - 10) < 0.001;
+    }
+
+    function getAllPlayerStats() {
+      const stats = {};
+      state.players.forEach(player => {
+        stats[player.id] = {
+          id: player.id,
+          name: player.name,
+          points: 0,
+          firsts: 0,
+          pods: 0,
+          opponents: []
+        };
+      });
+
+      for (const round of getCompletedRoundsOnly()) {
+        for (const pod of round.pods) {
+          if (!validatePodPoints(pod.points, pod.playerIds)) continue;
+
+          pod.playerIds.forEach(pid => {
+            const s = stats[pid];
+            if (s) s.pods += 1;
+          });
+
+          for (const pid of pod.playerIds) {
+            for (const otherId of pod.playerIds) {
+              if (pid !== otherId) {
+                stats[pid].opponents.push(otherId);
+              }
+            }
+          }
+
+          const numericPoints = pod.points.map(toNumber);
+          const maxPoints = Math.max(...numericPoints);
+
+          pod.playerIds.forEach((pid, idx) => {
+            const s = stats[pid];
+            if (!s) return;
+            s.points += numericPoints[idx];
+            if (Math.abs(numericPoints[idx] - maxPoints) < 0.001) {
+              s.firsts += 1;
+            }
+          });
+        }
+      }
+
+      const oppAvgMap = {};
+      for (const pid in stats) {
+        const s = stats[pid];
+        if (s.opponents.length === 0) {
+          oppAvgMap[pid] = 0;
+        } else {
+          const avg = s.opponents.reduce((sum, oppId) => sum + (stats[oppId]?.points || 0), 0) / s.opponents.length;
+          oppAvgMap[pid] = avg;
+        }
+      }
+
+      return Object.values(stats)
+        .map(s => ({ ...s, oppAvg: oppAvgMap[s.id] }))
+        .sort(sortStandings);
+    }
+
+    function sortStandings(a, b) {
+      if (b.points !== a.points) return b.points - a.points;
+      if (b.firsts !== a.firsts) return b.firsts - a.firsts;
+      if (b.oppAvg !== a.oppAvg) return b.oppAvg - a.oppAvg;
+      return a.name.localeCompare(b.name);
+    }
+
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    }
+
+    function getPodSizes(playerCount) {
+      if (playerCount < 3) return null;
+
+      const fours = Math.floor(playerCount / 4);
+      const rem = playerCount % 4;
+
+      if (rem === 0) return Array(fours).fill(4);
+
+      if (rem === 1) {
+        if (fours >= 2) return [...Array(fours - 2).fill(4), 3, 3, 3];
+        return null;
+      }
+
+      if (rem === 2) {
+        if (fours >= 1) return [...Array(fours - 1).fill(4), 3, 3];
+        if (playerCount === 6) return [3, 3];
+        return null;
+      }
+
+      if (rem === 3) {
+        return [...Array(fours).fill(4), 3];
+      }
+
+      return null;
+    }
+
+    function distributeSnake(ids, podSizes) {
+      const pods = podSizes.map((size, index) => ({
+        id: uid(),
+        podNumber: index + 1,
+        playerIds: [],
+        points: []
+      }));
+
+      let direction = 1;
+      let idx = 0;
+
+      for (const pid of ids) {
+        while (pods[idx].playerIds.length >= podSizes[idx]) {
+          idx += direction;
+          if (idx >= pods.length) {
+            direction = -1;
+            idx = pods.length - 1;
+          }
+          if (idx < 0) {
+            direction = 1;
+            idx = 0;
+          }
+        }
+
+        pods[idx].playerIds.push(pid);
+
+        let next = idx + direction;
+        while (
+          next >= 0 &&
+          next < pods.length &&
+          pods[next].playerIds.length >= podSizes[next]
+        ) {
+          next += direction;
+        }
+
+        if (next < 0 || next >= pods.length) {
+          direction *= -1;
+          next = idx + direction;
+
+          while (
+            next >= 0 &&
+            next < pods.length &&
+            pods[next].playerIds.length >= podSizes[next]
+          ) {
+            next += direction;
+          }
+        }
+
+        if (next >= 0 && next < pods.length) {
+          idx = next;
+        }
+      }
+
+      pods.forEach(pod => {
+        pod.points = round1DefaultPoints(pod.playerIds.length);
+      });
+
+      return pods;
+    }
+
+    function generatePodsForSwissRound() {
+      const roundNumber = state.currentRound + 1;
+      const activeIds = getActivePlayers().map(p => p.id);
+      const podSizes = getPodSizes(activeIds.length);
+
+      if (!podSizes) {
+        alert("Commander pods require a workable active player count. This build supports clean splits into 3s and 4s only.");
+        return false;
+      }
+
+      let pods = [];
+
+      if (roundNumber === 1) {
+        let orderedIds = [...activeIds];
+
+        if (state.round1SeedMode === "random") {
+          shuffle(orderedIds);
+        } else {
+          orderedIds.sort((a, b) => {
+            const pa = getPlayerById(a);
+            const pb = getPlayerById(b);
+            const diff = (pb?.infamy || 0) - (pa?.infamy || 0);
+            if (diff !== 0) return diff;
+            return (pa?.name || "").localeCompare(pb?.name || "");
+          });
+        }
+
+        pods = distributeSnake(orderedIds, podSizes);
+      } else {
+        const standingsIds = getAllPlayerStats()
+          .filter(s => activeIds.includes(s.id))
+          .map(s => s.id);
+
+        const remaining = [...standingsIds];
+
+        for (let podIndex = 0; podIndex < podSizes.length; podIndex++) {
+          const podSize = podSizes[podIndex];
+          const podPlayerIds = [];
+
+          if (remaining.length === 0) break;
+
+          podPlayerIds.push(remaining.shift());
+
+          while (podPlayerIds.length < podSize) {
+            let bestIndex = 0;
+            let bestScore = Infinity;
+
+            for (let i = 0; i < remaining.length; i++) {
+              const candidateId = remaining[i];
+              let repeatPenalty = 0;
+
+              for (const currentId of podPlayerIds) {
+                const podmateCounts = getPlayerPodmates(currentId);
+                repeatPenalty += (podmateCounts[candidateId] || 0) * 10;
+              }
+
+              const standingsPenalty = i * 0.25;
+              const totalScore = repeatPenalty + standingsPenalty;
+
+              if (totalScore < bestScore) {
+                bestScore = totalScore;
+                bestIndex = i;
+              }
+            }
+
+            podPlayerIds.push(remaining.splice(bestIndex, 1)[0]);
+          }
+
+          pods.push({
+            id: uid(),
+            podNumber: podIndex + 1,
+            playerIds: podPlayerIds,
+            points: round1DefaultPoints(podPlayerIds.length)
+          });
+        }
+      }
+
+      state.rounds.push({
+        roundNumber,
+        finalized: false,
+        pods
+      });
+
+      state.currentRound = roundNumber;
+      return true;
+    }
+
+    function createFinalPodIfNeeded() {
+      if (!state.finalPodEnabled) return;
+      if (state.finalPodStarted || state.finalPod) return;
+
+      const activeIds = getActivePlayers().map(p => p.id);
+      if (activeIds.length < 4) return;
+
+      const top4 = getAllPlayerStats()
+        .filter(s => activeIds.includes(s.id))
+        .slice(0, 4)
+        .map(s => s.id);
+
+      if (top4.length < 4) return;
+
+      state.finalPodStarted = true;
+      state.finalPod = {
+        finalized: false,
+        playerIds: top4,
+        points: [4, 3, 2, 1]
+      };
+    }
+
+    function currentRoundObj() {
+      if (state.currentRound <= 0) return null;
+      return state.rounds[state.currentRound - 1] || null;
+    }
+
+    function currentRoundIsComplete() {
+      const round = currentRoundObj();
+      if (!round) return false;
+      return round.pods.every(pod => validatePodPoints(pod.points, pod.playerIds));
+    }
+
+    function finalPodIsComplete() {
+      if (!state.finalPod) return false;
+      return validatePodPoints(state.finalPod.points, state.finalPod.playerIds);
+    }
+
+    function getFinalPodLeaders() {
+      if (!state.finalPod || !validatePodPoints(state.finalPod.points, state.finalPod.playerIds)) return [];
+      const maxPts = Math.max(...state.finalPod.points.map(toNumber));
+      return state.finalPod.playerIds.filter((pid, idx) => Math.abs(toNumber(state.finalPod.points[idx]) - maxPts) < 0.001);
+    }
+
+    function startTournament() {
+      const activePlayers = getActivePlayers();
+
+      if (activePlayers.length < 3) {
+        alert("Commander needs at least 3 active players.");
+        return;
+      }
+
+      if (!getPodSizes(activePlayers.length)) {
+        alert("This build supports clean 3-player and 4-player pod splits only.");
+        return;
+      }
+
+      state.started = true;
+      state.finishedSwiss = false;
+      state.currentRound = 0;
+      state.rounds = [];
+      state.finalPodStarted = false;
+      state.finalPod = null;
+      state.championId = null;
+      state.maxSwissRounds = getAutoSwissRounds(activePlayers.length);
+      state.round1SeedMode = document.getElementById("round1SeedMode").value;
+      state.finalPodEnabled = document.getElementById("finalPodEnabled").checked;
+
+      if (generatePodsForSwissRound()) {
+        saveState();
+        render();
+      }
+    }
+
+    function finalizeRound() {
+      if (!state.started) {
+        alert("Start the tournament first.");
+        return;
+      }
+
+      if (state.finalPodStarted && state.finalPod && !state.finalPod.finalized) {
+        if (!finalPodIsComplete()) {
+          alert("Final Pod must total exactly 10 points.");
+          return;
+        }
+
+        state.finalPod.finalized = true;
+
+        const leaders = getFinalPodLeaders();
+        if (leaders.length === 1) {
+          state.championId = leaders[0];
+        } else {
+          state.championId = null;
+          alert("Final Pod has a tie for highest points. Champion remains unresolved until you break the tie.");
+        }
+
+        saveState();
+        render();
+        return;
+      }
+
+      const round = currentRoundObj();
+      if (!round) {
+        alert("No active round.");
+        return;
+      }
+
+      if (round.finalized) {
+        alert("That round is already finalized.");
+        return;
+      }
+
+      if (!currentRoundIsComplete()) {
+        alert("Every pod must total exactly 10 points before finalizing.");
+        return;
+      }
+
+      round.finalized = true;
+
+      if (state.currentRound >= state.maxSwissRounds) {
+        state.finishedSwiss = true;
+        createFinalPodIfNeeded();
+      }
+
+      saveState();
+      render();
+    }
+
+    function reopenCurrentRound() {
+      if (!state.started) {
+        alert("No tournament is in progress.");
+        return;
+      }
+
+      if (state.finalPodStarted && state.finalPod && state.finalPod.finalized) {
+        if (!confirm("Reopen the Final Pod? This will remove the champion until you finalize again.")) return;
+        state.finalPod.finalized = false;
+        state.championId = null;
+        saveState();
+        render();
+        return;
+      }
+
+      if (state.finalPodStarted && state.finalPod && !state.finalPod.finalized) {
+        alert("The Final Pod is already open.");
+        return;
+      }
+
+      const round = currentRoundObj();
+      if (!round) {
+        alert("No current round exists.");
+        return;
+      }
+
+      if (!round.finalized) {
+        alert("The current round is already open.");
+        return;
+      }
+
+      if (state.currentRound < state.rounds.length) {
+        alert("Only the most recent round can be reopened.");
+        return;
+      }
+
+      if (!confirm(`Reopen Round ${round.roundNumber}? This keeps the pods but unlocks point edits.`)) return;
+
+      round.finalized = false;
+      state.finishedSwiss = false;
+
+      saveState();
+      render();
+    }
+
+    function buildNextRound() {
+      if (!state.started) {
+        alert("Start the tournament first.");
+        return;
+      }
+
+      if (state.finalPodStarted) {
+        alert("Swiss is over. Use the Final Pod section now.");
+        return;
+      }
+
+      const round = currentRoundObj();
+      if (!round) {
+        alert("No current round.");
+        return;
+      }
+
+      if (!round.finalized) {
+        alert("Finalize the current round before building the next round.");
+        return;
+      }
+
+      if (state.currentRound >= state.maxSwissRounds) {
+        state.finishedSwiss = true;
+        createFinalPodIfNeeded();
+        saveState();
+        render();
+        return;
+      }
+
+      if (!generatePodsForSwissRound()) return;
+
+      saveState();
+      render();
+    }
+
+    function undoLastRound() {
+      if (!state.started) {
+        alert("No tournament is in progress.");
+        return;
+      }
+
+      if (state.finalPodStarted) {
+        alert("Undo Last Round only works during Swiss before the Final Pod begins.");
+        return;
+      }
+
+      if (state.rounds.length === 0 || state.currentRound === 0) {
+        alert("There is no round to undo.");
+        return;
+      }
+
+      const round = currentRoundObj();
+      if (!round) {
+        alert("There is no current round to undo.");
+        return;
+      }
+
+      const confirmMsg = round.finalized
+        ? `Undo finalized Round ${round.roundNumber}? This will remove it and rewind standings.`
+        : `Undo open Round ${round.roundNumber}? This will remove it.`;
+
+      if (!confirm(confirmMsg)) return;
+
+      state.rounds.pop();
+      state.currentRound = state.rounds.length;
+      state.finishedSwiss = false;
+
+      saveState();
+      render();
+    }
+
+    function updatePodPoint(roundIndex, podId, playerIndex, value) {
+      const round = state.rounds[roundIndex];
+      if (!round || round.finalized) return;
+
+      const pod = round.pods.find(p => p.id === podId);
+      if (!pod) return;
+
+      pod.points[playerIndex] = value === "" ? "" : toNumber(value);
+
+      saveState();
+      render();
+    }
+
+    function updateFinalPodPoint(playerIndex, value) {
+      if (!state.finalPod || state.finalPod.finalized) return;
+      state.finalPod.points[playerIndex] = value === "" ? "" : toNumber(value);
+      saveState();
+      render();
+    }
+
+    function renderPlayers() {
+      const tbody = document.querySelector("#playersTable tbody");
+      tbody.innerHTML = "";
+
+      state.players.forEach((player, idx) => {
+        const tr = document.createElement("tr");
+
+        const statusText = player.dropped ? "Dropped" : "Active";
+        const toggleLabel = player.dropped ? "Undrop" : "Drop";
+        const canRemove = !state.started;
+        const infamyControl = state.started
+          ? `${player.infamy}`
+          : `<input type="number" step="1" value="${player.infamy}" class="narrow-input" data-infamy-player="${player.id}" />`;
+
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td>${escapeHtml(player.name)}</td>
+          <td>${infamyControl}</td>
+          <td class="${player.dropped ? "danger" : "success"}">${statusText}</td>
+          <td>
+            ${state.started
+              ? `<button class="${player.dropped ? "btn-blue" : "btn-gray"} small" data-toggle-drop="${player.id}">${toggleLabel}</button>`
+              : `<span class="muted">Available after start</span>`
+            }
+          </td>
+          <td>
+            ${canRemove
+              ? `<button class="btn-red small" data-remove-player="${player.id}">Remove</button>`
+              : `<span class="muted">Locked</span>`
+            }
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.querySelectorAll("[data-remove-player]").forEach(btn => {
+        btn.onclick = () => {
+          state.players = state.players.filter(p => p.id !== btn.dataset.removePlayer);
+          saveState();
+          render();
+        };
+      });
+
+      document.querySelectorAll("[data-infamy-player]").forEach(input => {
+        input.onchange = () => {
+          const player = getPlayerById(input.dataset.infamyPlayer);
+          if (!player) return;
+          player.infamy = toNumber(input.value);
+          saveState();
+          render();
+        };
+      });
+
+      document.querySelectorAll("[data-toggle-drop]").forEach(btn => {
+        btn.onclick = () => {
+          const player = getPlayerById(btn.dataset.toggleDrop);
+          if (!player) return;
+
+          const round = currentRoundObj();
+
+          if (round && !round.finalized) {
+            const seatedThisRound = round.pods.some(p => p.playerIds.includes(player.id));
+            if (seatedThisRound) {
+              alert("You cannot drop or undrop a player during an open round where they are seated. Undo the round if you need to repair pods.");
+              return;
+            }
+          }
+
+          if (state.finalPodStarted) {
+            alert("Drop and undrop are locked once the Final Pod has begun.");
+            return;
+          }
+
+          player.dropped = !player.dropped;
+          saveState();
+          render();
+        };
+      });
+
+      document.getElementById("playerCountPill").textContent =
+        `${state.players.length} Player${state.players.length === 1 ? "" : "s"}`;
+    }
+
+    function renderStandings() {
+      const tbody = document.querySelector("#standingsTable tbody");
+      tbody.innerHTML = "";
+
+      const activeIds = getActivePlayers().map(p => p.id);
+      const standings = getAllPlayerStats().filter(s => activeIds.includes(s.id));
+
+      standings.forEach((s, idx) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td>${escapeHtml(s.name)}</td>
+          <td>${s.points.toFixed(2).replace(/\.00$/, "")}</td>
+          <td>${s.firsts}</td>
+          <td>${s.pods}</td>
+          <td>${s.oppAvg.toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderPodScoreInputs(pod, roundIndex, locked) {
+      return pod.playerIds.map((pid, idx) => {
+        const player = getPlayerById(pid);
+        const pointsValue = pod.points[idx] === "" ? "" : toNumber(pod.points[idx]);
+        return `
+          <div class="score-card">
+            <div><strong>${escapeHtml(player ? player.name : "Unknown")}</strong></div>
+            <div class="spacer"></div>
+            <label>Points</label>
+            <input
+              type="number"
+              step="0.5"
+              min="0"
+              value="${pointsValue}"
+              data-round-index="${roundIndex}"
+              data-pod-id="${pod.id}"
+              data-player-index="${idx}"
+              ${locked ? "disabled" : ""}
+            />
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderPods() {
+      const container = document.getElementById("podsContainer");
+      const status = document.getElementById("roundStatusText");
+
+      if (!state.started || state.currentRound === 0) {
+        status.textContent = "No round yet.";
+        container.innerHTML = `<div class="muted">No pods yet.</div>`;
+        return;
+      }
+
+      if (state.finalPodStarted) {
+        status.innerHTML = `<span class="success">Swiss complete.</span> Use the Final Pod section below.`;
+        container.innerHTML = `<div class="muted">Swiss rounds are complete.</div>`;
+        return;
+      }
+
+      const round = currentRoundObj();
+      const locked = round.finalized;
+
+      status.innerHTML = locked
+        ? `<span class="success">Round ${round.roundNumber} finalized.</span> Standings are locked in. Reopen to fix points, or undo to rebuild pods.`
+        : `<span class="warn">Round ${round.roundNumber} open.</span> Each pod must total exactly 10 before finalization.`;
+
+      container.innerHTML = round.pods.map(pod => {
+        const total = getPodPointTotal(pod.points);
+        const valid = validatePodPoints(pod.points, pod.playerIds);
+
+        return `
+          <div class="pod-box">
+            <div class="player-line">
+              <strong>Pod ${pod.podNumber}</strong>
+              <span class="pill">${locked ? "Locked" : "Open"} • ${pod.playerIds.length} Players</span>
+            </div>
+            <div class="score-grid">
+              ${renderPodScoreInputs(pod, state.currentRound - 1, locked)}
+            </div>
+            <div class="score-total ${valid ? "success" : "danger"}">
+              Pod Total: ${total.toFixed(2).replace(/\.00$/, "")} / 10
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      container.querySelectorAll("input[data-pod-id]").forEach(input => {
+        input.onchange = () => {
+          updatePodPoint(
+            Number(input.dataset.roundIndex),
+            input.dataset.podId,
+            Number(input.dataset.playerIndex),
+            input.value
+          );
+        };
+      });
+    }
+
+    function renderFinalPod() {
+      const container = document.getElementById("finalPodContainer");
+      const pill = document.getElementById("finalPodPill");
+
+      if (!state.started) {
+        pill.textContent = "Not started";
+        container.innerHTML = `<div class="muted">Start a tournament first.</div>`;
+        return;
+      }
+
+      if (!state.finalPodEnabled) {
+        pill.textContent = "Disabled";
+        container.innerHTML = `<div class="muted">Final Pod is disabled for this event.</div>`;
+        return;
+      }
+
+      if (!state.finishedSwiss) {
+        pill.textContent = "Swiss in progress";
+        container.innerHTML = `<div class="muted">Final Pod unlocks after Swiss round ${state.maxSwissRounds} is finalized.</div>`;
+        return;
+      }
+
+      if (!state.finalPodStarted || !state.finalPod) {
+        pill.textContent = "Pending";
+        container.innerHTML = `<div class="muted">Final Pod has not been built yet.</div>`;
+        return;
+      }
+
+      if (state.championId) pill.textContent = "Champion set";
+      else pill.textContent = state.finalPod.finalized ? "Finalized" : "Open";
+
+      const locked = state.finalPod.finalized;
+      const total = getPodPointTotal(state.finalPod.points);
+      const valid = validatePodPoints(state.finalPod.points, state.finalPod.playerIds);
+      const leaders = getFinalPodLeaders();
+
+      container.innerHTML = `
+        ${state.championId ? `<div class="success"><strong>Champion:</strong> ${escapeHtml(getPlayerById(state.championId)?.name || "Unknown")}</div><div class="spacer"></div>` : ""}
+        ${state.finalPod.finalized && !state.championId && leaders.length > 1 ? `<div class="warn">Final Pod has a tie for highest points. Champion unresolved.</div><div class="spacer"></div>` : ""}
+        <div class="pod-box">
+          <div class="player-line">
+            <strong>Final Pod</strong>
+            <span class="pill">${locked ? "Locked" : "Open"} • 4 Players</span>
+          </div>
+          <div class="score-grid">
+            ${state.finalPod.playerIds.map((pid, idx) => {
+              const player = getPlayerById(pid);
+              const value = state.finalPod.points[idx] === "" ? "" : toNumber(state.finalPod.points[idx]);
+              return `
+                <div class="score-card">
+                  <div><strong>${escapeHtml(player ? player.name : "Unknown")}</strong></div>
+                  <div class="spacer"></div>
+                  <label>Points</label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    min="0"
+                    value="${value}"
+                    data-final-player-index="${idx}"
+                    ${locked ? "disabled" : ""}
+                  />
+                </div>
+              `;
+            }).join("")}
+          </div>
+          <div class="score-total ${valid ? "success" : "danger"}">
+            Pod Total: ${total.toFixed(2).replace(/\.00$/, "")} / 10
+          </div>
+        </div>
+      `;
+
+      container.querySelectorAll("input[data-final-player-index]").forEach(input => {
+        input.onchange = () => {
+          updateFinalPodPoint(Number(input.dataset.finalPlayerIndex), input.value);
+        };
+      });
+    }
+
+    function renderSetupSummary() {
+      const playerCount = getActivePlayers().length;
+      const rounds = playerCount >= 3 ? getAutoSwissRounds(playerCount) : 0;
+      const podSizes = playerCount >= 3 ? getPodSizes(playerCount) : null;
+      const podText = podSizes ? podSizes.join(" / ") : "n/a";
+
+      document.getElementById("setupSummary").innerHTML = playerCount > 0
+        ? `Active players: <strong>${playerCount}</strong> | Swiss rounds: <strong>${rounds}</strong> | Pod split: <strong>${podText}</strong> | Round 1 seed: <strong>${state.round1SeedMode}</strong> | Final Pod: <strong>${state.finalPodEnabled ? "On" : "Off"}</strong>`
+        : `Add players to begin.`;
+
+      document.getElementById("roundInfoPill").textContent = `Rounds: ${rounds}`;
+    }
+
+    function renderHeaderBits() {
+      document.getElementById("eventStatus").textContent = state.started ? "In progress" : "Not started";
+      document.getElementById("currentRoundPill").textContent = state.finalPodStarted ? "Swiss Complete" : `Round ${state.currentRound}`;
+
+      let phase = "Setup";
+      if (state.started && state.finalPodStarted) phase = "Final Pod";
+      else if (state.started) phase = "Swiss";
+
+      document.getElementById("phasePill").textContent = phase;
+    }
+
+    function render() {
+      document.getElementById("eventName").value = state.eventName || "";
+      document.getElementById("round1SeedMode").value = state.round1SeedMode || "random";
+      document.getElementById("finalPodEnabled").checked = !!state.finalPodEnabled;
+
+      renderPlayers();
+      renderStandings();
+      renderPods();
+      renderFinalPod();
+      renderSetupSummary();
+      renderHeaderBits();
+    }
+
+    function resetTournament() {
+      if (!confirm("Reset the tournament?")) return;
+
+      state = {
+        eventName: "",
+        started: false,
+        finishedSwiss: false,
+        players: [],
+        rounds: [],
+        currentRound: 0,
+        maxSwissRounds: 0,
+        round1SeedMode: "random",
+        finalPodEnabled: false,
+        finalPodStarted: false,
+        finalPod: null,
+        championId: null
+      };
+
+      document.getElementById("eventName").value = "";
+      document.getElementById("round1SeedMode").value = "random";
+      document.getElementById("finalPodEnabled").checked = false;
+      saveState();
+      render();
+    }
+
+    function saveState() {
+      state.eventName = document.getElementById("eventName").value.trim();
+      state.round1SeedMode = document.getElementById("round1SeedMode").value;
+      state.finalPodEnabled = document.getElementById("finalPodEnabled").checked;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function loadState() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      try {
+        state = JSON.parse(raw);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function addPlayerFromInput() {
+      const input = document.getElementById("playerName");
+      const infamyInput = document.getElementById("playerInfamy");
+      const name = input.value.trim();
+      if (!name) return;
+
+      if (state.started) {
+        alert("Add players before starting the tournament.");
+        return;
+      }
+
+      state.players.push(createPlayer(name, infamyInput.value));
+      input.value = "";
+      infamyInput.value = "0";
+      saveState();
+      render();
+    }
+
+    function loadSamplePlayers() {
+      if (state.started) {
+        alert("Reset first if you want sample players.");
+        return;
+      }
+
+      state.players = [
+        createPlayer("Alice", 12),
+        createPlayer("Bob", 10),
+        createPlayer("Charlie", 8),
+        createPlayer("Diana", 7),
+        createPlayer("Ethan", 6),
+        createPlayer("Fiona", 5),
+        createPlayer("Gabe", 4),
+        createPlayer("Hazel", 3),
+        createPlayer("Ivan", 2),
+        createPlayer("Jenna", 2),
+        createPlayer("Kai", 1),
+        createPlayer("Lena", 0)
+      ];
+
+      saveState();
+      render();
+    }
+
+    document.getElementById("addPlayerBtn").onclick = addPlayerFromInput;
+
+    document.getElementById("playerName").addEventListener("keydown", e => {
+      if (e.key === "Enter") addPlayerFromInput();
+    });
+
+    document.getElementById("importSampleBtn").onclick = loadSamplePlayers;
+
+    document.getElementById("clearPlayersBtn").onclick = () => {
+      if (state.started) {
+        alert("Reset the tournament to clear players.");
+        return;
+      }
+      state.players = [];
+      saveState();
+      render();
+    };
+
+    document.getElementById("startTournamentBtn").onclick = () => {
+      state.eventName = document.getElementById("eventName").value.trim();
+      state.round1SeedMode = document.getElementById("round1SeedMode").value;
+      state.finalPodEnabled = document.getElementById("finalPodEnabled").checked;
+      startTournament();
+    };
+
+    document.getElementById("finalizeRoundBtn").onclick = finalizeRound;
+    document.getElementById("reopenRoundBtn").onclick = reopenCurrentRound;
+    document.getElementById("buildNextRoundBtn").onclick = buildNextRound;
+    document.getElementById("undoLastRoundBtn").onclick = undoLastRound;
+    document.getElementById("resetTournamentBtn").onclick = resetTournament;
+
+    document.getElementById("saveBtn").onclick = () => {
+      saveState();
+      alert("Saved.");
+    };
+
+    document.getElementById("loadBtn").onclick = () => {
+      loadState();
+      render();
+      alert("Loaded.");
+    };
+
+    loadState();
+    render();
+  </script>
+</body>
+</html>
