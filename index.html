@@ -18,7 +18,6 @@
       --gray: #374151;
       --gold: #92400e;
       --purple: #6d28d9;
-      --teal: #0f766e;
     }
 
     * { box-sizing: border-box; }
@@ -98,7 +97,6 @@
     .btn-gray { background: var(--gray); }
     .btn-gold { background: var(--gold); }
     .btn-purple { background: var(--purple); }
-    .btn-teal { background: var(--teal); }
 
     .muted {
       color: var(--muted);
@@ -311,8 +309,8 @@
           <div class="muted">Pods prefer 4-player groups and use 3-player pods when needed.</div>
           <div class="muted">5-player pods are not allowed in this build.</div>
           <div class="muted">Each pod must total exactly 10 points.</div>
-          <div class="muted">Default 4-player pod points: 4 / 3 / 2 / 1</div>
-          <div class="muted">Default 3-player pod points: 4 / 3 / 3</div>
+          <div class="muted">Manual scoring only. No auto split-score shortcuts.</div>
+          <div class="muted">Default 3-player pod balance is still 4 / 3 / 3 if you choose to type it manually.</div>
           <div class="muted">Standings update only after finalization.</div>
           <div class="muted">Reopen Current Round keeps pods but unlocks point edits.</div>
           <div class="muted">Undo Last Round removes the most recent Swiss round.</div>
@@ -403,7 +401,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "commander_pods_state_v4_corrected";
+    const STORAGE_KEY = "commander_pods_state_v5_manual_only";
 
     let state = {
       eventName: "",
@@ -652,7 +650,7 @@
       }
 
       pods.forEach(pod => {
-        pod.points = round1DefaultPoints(pod.playerIds.length);
+        pod.points = Array(pod.playerIds.length).fill("");
       });
 
       return pods;
@@ -730,7 +728,7 @@
             id: uid(),
             podNumber: podIndex + 1,
             playerIds: podPlayerIds,
-            points: round1DefaultPoints(podPlayerIds.length)
+            points: Array(podPlayerIds.length).fill("")
           });
         }
       }
@@ -763,7 +761,7 @@
       state.finalPod = {
         finalized: false,
         playerIds: top4,
-        points: [4, 3, 2, 1]
+        points: ["", "", "", ""]
       };
     }
 
@@ -1079,45 +1077,20 @@
       return true;
     }
 
-    function applyPodPreset(roundIndex, podId, presetName) {
+    function clearPodScores(roundIndex, podId) {
       const round = state.rounds[roundIndex];
       if (!round || round.finalized) return;
       const pod = round.pods.find(p => p.id === podId);
       if (!pod) return;
 
-      const size = pod.playerIds.length;
-
-      if (size === 4) {
-        if (presetName === "default") pod.points = [4, 3, 2, 1];
-        if (presetName === "tie1st") pod.points = [3.5, 3.5, 2, 1];
-        if (presetName === "tielast") pod.points = [4, 3, 1.5, 1.5];
-        if (presetName === "splitall") pod.points = [2.5, 2.5, 2.5, 2.5];
-        if (presetName === "clear") pod.points = ["", "", "", ""];
-      }
-
-      if (size === 3) {
-        if (presetName === "default") pod.points = [4, 3, 3];
-        if (presetName === "tie1st") pod.points = [3.5, 3.5, 3];
-        if (presetName === "tielast") pod.points = [4, 3, 3];
-        if (presetName === "splitall") pod.points = [10 / 3, 10 / 3, 10 / 3];
-        if (presetName === "clear") pod.points = ["", "", ""];
-      }
-
+      pod.points = Array(pod.playerIds.length).fill("");
       saveState();
       render();
     }
 
-    function applyFinalPodPreset(presetName) {
+    function clearFinalPodScores() {
       if (!state.finalPod || state.finalPod.finalized) return;
-      const size = state.finalPod.playerIds.length;
-      if (size !== 4) return;
-
-      if (presetName === "default") state.finalPod.points = [4, 3, 2, 1];
-      if (presetName === "tie1st") state.finalPod.points = [3.5, 3.5, 2, 1];
-      if (presetName === "tielast") state.finalPod.points = [4, 3, 1.5, 1.5];
-      if (presetName === "splitall") state.finalPod.points = [2.5, 2.5, 2.5, 2.5];
-      if (presetName === "clear") state.finalPod.points = ["", "", "", ""];
-
+      state.finalPod.points = Array(state.finalPod.playerIds.length).fill("");
       saveState();
       render();
     }
@@ -1283,19 +1256,11 @@
       }).join("");
     }
 
-    function renderAutoFillButtons(roundIndex, pod, locked) {
+    function renderPodClearButton(roundIndex, pod, locked) {
       if (locked) return "";
-
-      const isFour = pod.playerIds.length === 4;
-      const splitLabel = isFour ? "4-way split" : "3-way split";
-
       return `
         <div class="auto-fill-row">
-          <button class="btn-teal tiny" data-preset-round="${roundIndex}" data-preset-pod="${pod.id}" data-preset-name="default">Default</button>
-          <button class="btn-teal tiny" data-preset-round="${roundIndex}" data-preset-pod="${pod.id}" data-preset-name="tie1st">Tie 1st</button>
-          <button class="btn-teal tiny" data-preset-round="${roundIndex}" data-preset-pod="${pod.id}" data-preset-name="tielast">Tie Last</button>
-          <button class="btn-teal tiny" data-preset-round="${roundIndex}" data-preset-pod="${pod.id}" data-preset-name="splitall">${splitLabel}</button>
-          <button class="btn-gray tiny" data-preset-round="${roundIndex}" data-preset-pod="${pod.id}" data-preset-name="clear">Clear</button>
+          <button class="btn-gray tiny" data-clear-round="${roundIndex}" data-clear-pod="${pod.id}">Clear</button>
         </div>
       `;
     }
@@ -1336,7 +1301,7 @@
             <div class="score-grid">
               ${renderPodScoreInputs(pod, state.currentRound - 1, locked)}
             </div>
-            ${renderAutoFillButtons(state.currentRound - 1, pod, locked)}
+            ${renderPodClearButton(state.currentRound - 1, pod, locked)}
             <div class="score-total ${valid ? "success" : "danger"}">
               Pod Total: ${total.toFixed(2).replace(/\.00$/, "")} / 10
             </div>
@@ -1370,13 +1335,9 @@
         };
       });
 
-      container.querySelectorAll("[data-preset-name]").forEach(btn => {
+      container.querySelectorAll("[data-clear-round]").forEach(btn => {
         btn.onclick = () => {
-          applyPodPreset(
-            Number(btn.dataset.presetRound),
-            btn.dataset.presetPod,
-            btn.dataset.presetName
-          );
+          clearPodScores(Number(btn.dataset.clearRound), btn.dataset.clearPod);
         };
       });
     }
@@ -1483,11 +1444,7 @@
           </div>
           ${locked ? "" : `
             <div class="auto-fill-row">
-              <button class="btn-teal tiny" data-final-preset="default">Default</button>
-              <button class="btn-teal tiny" data-final-preset="tie1st">Tie 1st</button>
-              <button class="btn-teal tiny" data-final-preset="tielast">Tie Last</button>
-              <button class="btn-teal tiny" data-final-preset="splitall">4-way split</button>
-              <button class="btn-gray tiny" data-final-preset="clear">Clear</button>
+              <button class="btn-gray tiny" id="clearFinalPodBtn">Clear</button>
             </div>
           `}
           <div class="score-total ${valid ? "success" : "danger"}">
@@ -1502,11 +1459,10 @@
         };
       });
 
-      container.querySelectorAll("[data-final-preset]").forEach(btn => {
-        btn.onclick = () => {
-          applyFinalPodPreset(btn.dataset.finalPreset);
-        };
-      });
+      const clearBtn = document.getElementById("clearFinalPodBtn");
+      if (clearBtn) {
+        clearBtn.onclick = () => clearFinalPodScores();
+      }
     }
 
     function renderSetupSummary() {
